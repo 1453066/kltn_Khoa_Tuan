@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">My Application</string>
+    <string name="textview_id">Mã thẻ: </string>
+    <string name="textview_id_hint">Nhập mã thẻ tại đây</string>
+    <string name="textview_password_hint">Nhập mật khẩu tại đây</string>
+    <string name="textview_password">Mật khẩu: </string>
+    <string name="textview_forgot_password"><u><i>Quên mật khẩu? Nhấn vào đây</i></u></string>
+    <string name="button_login">Đăng nhập</string>
+</resources>
