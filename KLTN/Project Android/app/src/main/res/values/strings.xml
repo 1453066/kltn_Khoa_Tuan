@@ -6,4 +6,6 @@
     <string name="textview_password">Mật khẩu: </string>
     <string name="textview_forgot_password"><u><i>Quên mật khẩu? Nhấn vào đây</i></u></string>
     <string name="button_login">Đăng nhập</string>
+    <string name="drawer_open">Open navigation drawer</string>
+    <string name="drawer_close">Close navigation drawer</string>
 </resources>
