@@ -12,6 +12,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.support.v7.widget.Toolbar;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ExpandableListAdapter;
 import android.widget.ExpandableListView;
@@ -19,7 +20,6 @@ import android.widget.ExpandableListView.OnChildClickListener;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.w3c.dom.Text;
 
@@ -42,16 +42,8 @@ public class MainPageActivity extends AppCompatActivity{
     private HashMap<String, List<String>> childMapList;
     private ListView mProductListView;
     private CustomApdapter mCustomAdapter;
-    private int[] IMAGES = {R.drawable.ic_shopping_cart_white_24dp,R.drawable.ic_shopping_cart_white_24dp,R.drawable.ic_shopping_cart_white_24dp,
-            R.drawable.ic_shopping_cart_white_24dp,R.drawable.ic_shopping_cart_white_24dp, R.drawable.ic_shopping_cart_white_24dp,R.drawable.ic_shopping_cart_white_24dp,
-            R.drawable.ic_shopping_cart_white_24dp,R.drawable.ic_shopping_cart_white_24dp,R.drawable.ic_shopping_cart_white_24dp,R.drawable.ic_shopping_cart_white_24dp,
-            R.drawable.ic_shopping_cart_white_24dp,R.drawable.ic_shopping_cart_white_24dp,R.drawable.ic_shopping_cart_white_24dp,R.drawable.ic_shopping_cart_white_24dp};
-    private String[] PRODUCTNAME = {"Product Name", "Product Name", "Product Name", "Product Name", "Product Name",
-            "Product Name", "Product Name","Product Name", "Product Name", "Product Name",
-            "Product Name", "Product Name", "Product Name", "Product Name", "Product Name"};
-    private int[] PRODUCTPRICE = {1000, 500, 300, 1000, 2000,
-            1000, 500, 300, 1000, 2000,
-            1000, 500, 300, 1000, 2000};
+    private GeneralDB db;
+    private ArrayList<Item> ItemList;
 
 
     @Override
@@ -71,28 +63,34 @@ public class MainPageActivity extends AppCompatActivity{
         toolbar = (Toolbar)findViewById(R.id.toolbar);
         myExpandableListView = (ExpandableListView)findViewById(R.id.left_drawer);
         mProductListView = (ListView)findViewById(R.id.productlistview);
-
+        //Đọc data từ bảng
+        db = new GeneralDB(this);
+        ItemList = new ArrayList<Item>();
+         for(int i=0;i<10;i++){
+             Item tmp = new Item(i, "Product Name " + i, 500+i, 0.0F , R.drawable.ic_shopping_cart_white_24dp, "Nothing here",1);
+             db.InsertNewItem(tmp);
+         }
+        ItemList = db.ReadItemList();
+        //Gán listview vào customlistview
         mCustomAdapter = new CustomApdapter();
         mProductListView.setAdapter(mCustomAdapter);
-
-
+        //Lấy toolbar + sửa icon
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
         getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_menu_white_24dp);
         //Toggle cho navigation bar
         mDrawerToggle = new ActionBarDrawerToggle(this,mDrawerLayout,toolbar,R.string.app_name,R.string.app_name);
-
         //Tạo dòng cho navigation bar
         groupList = new ArrayList<String>();
         childMapList = new HashMap<String, List<String>>();
-
+        //Loại sản phẩm
         List<String> product = new ArrayList<String>();
         product.add("SP 1");
         product.add("SP 2");
         product.add("SP 3");
         product.add("SP 4");
-
+        //Menu trong navigation bar
         groupList.add("Tài khoản");
         groupList.add("Sản phẩm");
         groupList.add("Trợ giúp");
@@ -107,11 +105,21 @@ public class MainPageActivity extends AppCompatActivity{
         myExpandableListAdapter = new MyBaseExpandableListAdapter(this, groupList, childMapList);
 
         myExpandableListView.setAdapter(myExpandableListAdapter);
-
+        //Tạo listener cho navigation bar
         myExpandableListView.setOnChildClickListener(myOnChildClickListener);
         myExpandableListView.setOnGroupClickListener(myOnGroupClickListener);
         myExpandableListView.setOnGroupCollapseListener(myOnCollapseListener);
         myExpandableListView.setOnGroupExpandListener(myOnGroupExpandListener);
+
+        mProductListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Intent i = new Intent(MainPageActivity.this,ItemDetailActivity.class);
+                int tmp = ItemList.get(position).getId();
+                i.putExtra("ID", tmp);
+                startActivity(i);
+            }
+        });
     }
 
     @Override
@@ -124,9 +132,10 @@ public class MainPageActivity extends AppCompatActivity{
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
-        if (id == R.id.menu_cart)
-            return  true;
-
+        if (id == R.id.menu_cart) {
+            startActivity(new Intent(MainPageActivity.this, CartPageActivity.class));
+            return false;
+        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -165,7 +174,7 @@ public class MainPageActivity extends AppCompatActivity{
     class CustomApdapter extends BaseAdapter{
         @Override
         public int getCount() {
-            return IMAGES.length;
+            return ItemList.size();
         }
 
         @Override
@@ -185,9 +194,9 @@ public class MainPageActivity extends AppCompatActivity{
             TextView txtProductName = (TextView)convertView.findViewById(R.id.txtProductName);
             TextView txtProductPrice = (TextView)convertView.findViewById(R.id.txtProductPrice);
 
-            imgProduct.setImageResource(IMAGES[position]);
-            txtProductName.setText(PRODUCTNAME[position]);
-            txtProductPrice.setText(String.valueOf(PRODUCTPRICE[position]));
+            imgProduct.setImageResource(ItemList.get(position).getImage());
+            txtProductName.setText(ItemList.get(position).getItemName());
+            txtProductPrice.setText(String.valueOf(ItemList.get(position).getPrice()));
 
             return convertView;
         }
