@@ -15,7 +15,7 @@ import org.w3c.dom.Text;
 
 public class ItemDetailActivity extends AppCompatActivity{
     private Button btnAdd;
-    private TextView txtName, txtPrice, txtDescription, txtPromo;
+    private TextView txtName, txtPrice, txtDescription, txtPromo, txtAmount;
     private GeneralDB db;
     private Item item;
     @Override
@@ -31,6 +31,7 @@ public class ItemDetailActivity extends AppCompatActivity{
         txtName = (TextView)findViewById(R.id.txtItemName);
         txtPrice = (TextView)findViewById(R.id.txtItemPrice);
         txtPromo = (TextView)findViewById(R.id.txtItemPromo);
+        txtAmount = (TextView)findViewById(R.id.txtAmount);
 
         Bundle extra = getIntent().getExtras();
         int tmp = extra.getInt("ID");
@@ -44,6 +45,7 @@ public class ItemDetailActivity extends AppCompatActivity{
         btnAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                item.setAmount(Integer.valueOf(txtAmount.getText().toString()));
                 db.InsertNewItemChecklist(item);
             }
         });

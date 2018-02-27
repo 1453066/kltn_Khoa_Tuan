@@ -76,7 +76,6 @@ public class GeneralDB extends SQLiteOpenHelper {
     //Thêm sản phẩm vào bảng checklist
     public void InsertNewItemChecklist(Item item){
         SQLiteDatabase db = this.getWritableDatabase();
-        item.setAmount(1);
         ContentValues content = new ContentValues();
         content.put(KEY_ID,item.getId());
         content.put(KEY_PRODUCT_NAME, item.getItemName());

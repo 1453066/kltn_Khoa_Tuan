@@ -15,6 +15,9 @@ import android.support.v7.widget.Toolbar;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -23,6 +26,7 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RadioGroup;
 import android.widget.RelativeLayout;
+import android.widget.Spinner;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -112,7 +116,7 @@ public class CartPageActivity extends AppCompatActivity{
         ItemList = db.ReadItemChecklist();
         //Dòng sản phẩm
         for(int i=0;i<ItemList.size();i++){
-            tablelayout.addView(createNewTableRow(i,ItemList.get(i).getItemName(),ItemList.get(i).getAmount(),(float)ItemList.get(i).getPrice(),ItemList.get(i).getPromo()));
+            tablelayout.addView(createNewTableRow(i,ItemList.get(i).getItemName(),ItemList.get(i).getAmount(),(float)ItemList.get(i).getPrice(),ItemList.get(i).getPromo(), ItemList.get(i)));
             TotalMoney += (float)(ItemList.get(i).getPrice() - ItemList.get(i).getPrice()*ItemList.get(i).getPromo());
         }
 
@@ -123,8 +127,8 @@ public class CartPageActivity extends AppCompatActivity{
         tablelayout.addView(dashline);
 
         //Tổng cộng + VAT
-        tablelayout.addView(createNewTableRow(-1,"Tổng cộng",0,TotalMoney,0.0f));
-        tablelayout.addView(createNewTableRow(-1,"VAT",0,TotalMoney*0.1f,0.0f));
+        tablelayout.addView(createNewTableRow(-1,"Tổng cộng",0,TotalMoney,0.0f, null));
+        tablelayout.addView(createNewTableRow(-1,"VAT",0,TotalMoney*0.1f,0.0f, null));
 
         //Dòng kẻ đen
         dashline = new View(this);
@@ -133,7 +137,7 @@ public class CartPageActivity extends AppCompatActivity{
         tablelayout.addView(dashline);
 
         //Thành tiền
-        tablelayout.addView(createNewTableRow(-1,"Thành tiền",0,(int)(TotalMoney+TotalMoney*0.1),0.0f));
+        tablelayout.addView(createNewTableRow(-1,"Thành tiền",0,(int)(TotalMoney+TotalMoney*0.1),0.0f, null));
         //View mới để chứa button
         //ConstraintSet constraintSet = new ConstraintSet();
         //ConstraintLayout constraintLayout = new ConstraintLayout(this);
@@ -199,15 +203,20 @@ public class CartPageActivity extends AppCompatActivity{
         }
     };
 
-    private TableRow createNewTableRow(int position,String Name, int Amount, float Price, float Promo){
+    private TableRow createNewTableRow(int position,String Name,final int Amount, float Price, float Promo, final Item item){
         TableRow Row;
-        TextView NameRow, AmountRow, PriceRow;
+        TextView NameRow, PriceRow;
         CheckBox checkBox;
+        final Spinner AmountRow;
+        ArrayList<String>spinnerList;
+        int n;
         checkBox = new CheckBox(this);
         NameRow = new TextView(this);
-        AmountRow = new TextView(this);
+        AmountRow = new Spinner(this);
         PriceRow = new TextView(this);
         Row = new TableRow(this);
+        spinnerList = new ArrayList<String>();
+        n = 100;
         Row.setLayoutParams(new TableRow.LayoutParams(TableRow.LayoutParams.FILL_PARENT, TableRow.LayoutParams.WRAP_CONTENT));
 
         //Tạo checkbox + tag
@@ -236,14 +245,53 @@ public class CartPageActivity extends AppCompatActivity{
         final float scale = getResources().getDisplayMetrics().density;
         int padding_in_px = (int) (padding_in_dp * scale + 0.5f);
         NameRow.setPadding(padding_in_px,padding_in_px,padding_in_px,padding_in_px);
-
+        //Thêm cột tên
+        Row.addView(NameRow);
         //Cột số lượng sản phẩm
-        AmountRow.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
-        AmountRow.setTextColor(getResources().getColor(R.color.black));
-        AmountRow.setGravity(Gravity.LEFT);
-        AmountRow.setPadding(padding_in_px, padding_in_px, padding_in_px, padding_in_px);
-        if (Amount != 0) {
-            AmountRow.setText(Integer.toString(Amount));
+        if (position != -1) {
+            for(int i=1;i<n;i++){
+                spinnerList.add(Integer.toString(i));
+            }
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.support_simple_spinner_dropdown_item, spinnerList){
+                public View getView(int position, View convertView, ViewGroup parent) {
+                    View v = super.getView(position, convertView, parent);
+                        ((TextView) v).setTextSize(18);
+                        ((TextView) v).setGravity(Gravity.CENTER);
+                        ((TextView) v).setTextColor(getResources().getColorStateList(R.color.black)
+                    );
+                    return v;
+                }
+
+                public View getDropDownView(int position, View convertView, ViewGroup parent) {
+                    View v = super.getDropDownView(position, convertView, parent);
+                    ((TextView) v).setTextColor(getResources().getColorStateList(R.color.black));
+                    ((TextView) v).setBackgroundColor(getResources().getColor(R.color.white));
+                    ((TextView) v).setGravity(Gravity.CENTER);
+                    return v;
+                }
+            };
+            AmountRow.setAdapter(adapter);
+            AmountRow.setSelection(Amount);
+            AmountRow.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    AmountRow.setSelection(position);
+                    item.setAmount(position);
+                    db.UpdateOneItemChecklist(item);
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {
+
+                }
+            });
+            //Thêm cột số lượng
+            Row.addView(AmountRow);
+        }
+        else{
+            View tmpView = new View(this);
+            tmpView.setLayoutParams(new TableRow.LayoutParams(1, TableRow.LayoutParams.MATCH_PARENT));
+            Row.addView(tmpView);
         }
 
         //Cột giá tiền
@@ -252,10 +300,7 @@ public class CartPageActivity extends AppCompatActivity{
         PriceRow.setGravity(Gravity.RIGHT);
         PriceRow.setText(Float.toString(Price - (Price*Promo)));
         PriceRow.setPadding(padding_in_px,padding_in_px,padding_in_px,padding_in_px);
-
-        //Thêm view vào dòng
-        Row.addView(NameRow);
-        Row.addView(AmountRow);
+        //Thêm cột tiền
         Row.addView(PriceRow);
 
         return Row;
@@ -268,7 +313,8 @@ public class CartPageActivity extends AppCompatActivity{
                 checkedItem.add(Integer.parseInt(buttonView.getTag().toString()));
             }
             else{
-                checkedItem.remove(Integer.parseInt(buttonView.getTag().toString()));
+                checkedItem.remove(Integer.valueOf(Integer.parseInt(buttonView.getTag().toString())));
+
             }
         }
     };
